@@ -54,11 +54,14 @@ ns=3
 
 # initial conditions
 X0 = [
-    normalize!([10.0;0.0;0.0],1),
+    #normalize!([10.0;0.0;0.0],1),
     normalize!([0.0;10.0;0.0],1),
-    normalize!([0.0;0.0;10.0],1),
-    normalize!([10.0;10.0;0.0],1),
-    normalize!([0.0;10.0;10.0],1),
+    #normalize!([0.0;0.0;10.0],1),
+    normalize!([7.0;3.0;0.0],1),
+    normalize!([0.0;2.0;8.0],1),
+    normalize!([6.0;0.0;4.0],1),
+    #normalize!([10.0;10.0;0.0],1),
+    #normalize!([0.0;10.0;10.0],1),
     #normalize!([7.0;0.0;10.0],1)
     ]
 
@@ -83,7 +86,7 @@ f!(dx,x,param,t) = edm_memoryless_payoff!(dx,x,param,t;learning_rule=bnn)
 f!(dx,x,param,t) = edm_memoryless_payoff!(dx,x,param,t;learning_rule=unbounded_smith)
 
 #or do hybrid_learning_rules, where the vector given to hybrid_rule_maker weighs the rules to be used 
-my_hybrid_learning_rule = hybrid_rule_maker([0.3,0.3])
+my_hybrid_learning_rule = hybrid_rule_maker([0.3,0.3,0.3])
 ## another way of using hybrid_rule_maker is to explicitly list the rules being weighed as follows:
 # my_hybrid_learning_rule = hybrid_rule_maker([0.001,0.1],learning_rules=[unbounded_smith,unbounded_smith])
 
@@ -101,13 +104,10 @@ f3 = plot()
 sols = []
 alphas_list = []
 for x0 in X0
-    for alphas in [[1.0;0.0],[0.0;1.0],[0.0;0.1]]
+    for alphas in [[1.0;0.0;0.0],[0.0;1.0;0.0],[0.0;0.01;0.1]]
         T  = 100.0
 
         local my_hybrid_learning_rule = hybrid_rule_maker(alphas)
-
-        # here is the storage function of the EDM
-        my_hybrid_S = hybrid_storage_fun_maker(alphas)
         
         # f! is the EDM
         f!(dx,x,param,t) = edm_memoryless_payoff!(dx,x,param,t;learning_rule=my_hybrid_learning_rule)
@@ -152,18 +152,23 @@ savefig("potential_one_solution."*plt_ext)
 
 
 ####### example 4
+ 
+my_k = -1.0
+my_λ = 5.0
+my_b = [2;0;0]/(my_k*my_λ)
+my_A = [0 0 0; 0 1 0; 0 0 1]
+my_A = (my_A+my_A')/2
 
-
-q_dot(sd, x, q, t; λ=1.0, A=I(length(x)), b=[1;2;3], k=1.0) = λ*(A*x+b-q)
+q_dot(sd, x, q, t; λ=my_λ, A=my_A, b=my_b, k=my_k) = λ*(A*x+b-q)
 mathcal_F(sd, x, t) = -(x-ones(3))
-F(sd, x, q, t; λ=1.0, A=I(length(x)), b=[1;2;3], k=1.0) = mathcal_F(sd, x, t) + k*λ*(A*x+b-q)
+F(sd, x, q, t; λ=my_λ, A=my_A, b=my_b, k=my_k) = mathcal_F(sd, x, t) + k*λ*(A*x+b-q)
 
 
 my_game = PDM(ns,ns,q_dot,F)
 
 
 ##########
-#here we plot trajectories for pure, BNN and Smith
+#here we plot trajectories for hybrid, BNN + Smith + replicator
 ##########
 
 ##setup a clean plots
@@ -174,14 +179,11 @@ f3 = plot()
 sols = []
 alphas_list = []
 for x0 in X0
-    for alphas in [[1;0],[0;1],[1;1]]
+    for alphas in [[1;0;0],[0;1;0],[0.01;0;1]]
         T  = 100.0
 
         local my_hybrid_learning_rule = hybrid_rule_maker(alphas)
 
-        # here is the storage function of the EDM
-        my_hybrid_S = hybrid_storage_fun_maker(alphas)
-        
         # f! is the EDM+PDM
         f!(du,u,param,t) = edm_dynamic_pdm!(du,u,param,t;learning_rule=my_hybrid_learning_rule)
 
@@ -202,17 +204,39 @@ FF(x) = my_game.F(my_game, x, 0.0)
 #[:red :blue :green]) 
 # palette(:Set1_5)
 aux_c = palette(:Set1_5)[[3,5,2]]
-simplex_quiver_plot!(sols, FF, ptype=plot!, linescolor=aux_c)
-plot!([1 1 1],[1 1 1],label=["BNN" "Smith" "??"], color=aux_c', lw=5)
+#aux_c = palette(:Set1_5)[[3,5]]
+
+# :auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+aux_ls = [:solid; :dot; :dashdotdot]
+
+simplex_sols_plot!(sols, ptype=plot!, linescolor=aux_c, linestyles=aux_ls )
+
+aux = 'c'
+for x0 in X0
+    global aux
+    v0 = [0 1 -1;1 -1/2 -1/2]*x0
+
+    x1 = copy(x0)
+    x1[findmin(x0)[2]] -= 0.1
+    v1 = [0 1 -1;1 -1/2 -1/2]*x1
+
+    #v1 = v0.*(1+0.1/norm(v0,1))
+    #v1 = rotation_mat2D(-5)*v1
+
+    aux_c_local = palette(:Set1_5)[1]
+
+    plot!([v0[1]], [v0[2]], ms=5,shape=:rect,c=aux_c_local, annotations = (v1[1], v1[2], Plots.text(aux, :right, aux_c_local)), label = nothing)
+    aux = aux+1
+end
+
+#plot!([1 1 1],[1 1 1],label=[L"\mathcal{T}^\text{\tiny BNN}" L"\mathcal{T}^\text{\tiny Smith}" L"\mathcal{T}^\text{\tiny A}"], color=aux_c', ls=permutedims(aux_ls), lw=2)
+plot!([1 1 1],[1 1 1],label=[L"\mathcal{T}^{BNN}" L"\mathcal{T}^{Smith}" L"\mathcal{T}^A"], color=aux_c', ls=permutedims(aux_ls), lw=2)
 annotate!([0; 1.03; -1].*1.1,[1; -1/2 ;-1/2].*1.1, ["1", "2", "3"])
 xlims!(-1.3,1.3)
 ylims!(-0.6,1.15)
 
 
-
-title!("Canonical Learning Rules")
+#title!("Rule = Replicator + 0.01*Smith ")
 #%%
-savefig("pdm_quiver_pure."*plt_ext)
-
-plot(sols[1])
-savefig("pdm_one_solution."*plt_ext)
+savefig("pdm."*plt_ext)
+#%%

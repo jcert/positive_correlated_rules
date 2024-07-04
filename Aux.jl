@@ -133,3 +133,26 @@ function simplex_quiver_plot!(s,F;ptype=scatter!,T::Int=20,linescolor=:Spectral_
     plot!(ticks=false, grid=false)
      
 end
+
+
+function simplex_sols_plot!(s;ptype=scatter!,T::Int=20,linescolor=:Spectral_3, linestyles=[:dots] )
+
+    
+    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=3.0)
+    if s isa Vector
+        for (i, sol) in enumerate(s)
+            simplex_plot_aux(sol; ptype=ptype, color=linescolor[1+(i-1)%length(linescolor)], linestyle=linestyles[1+(i-1)%length(linestyles)])
+        end
+    else
+        simplex_plot_aux(s; ptype=ptype, color=linescolor)
+    end
+
+    plot!(ticks=false, grid=false)
+     
+end
+
+function rotation_mat2D(degrees)
+    d = degrees*pi/180
+    [cos(d) sin(d); -sin(d) cos(d)]
+end
+

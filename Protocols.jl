@@ -67,10 +67,36 @@ function bnn_S(x::Vector{<:Real},p::Vector{<:Real}; λ=1.0, τ=1.0 )
 end
 
 
+"""
+`replicator(x::Vector{<:Real},p::Vector{<:Real}; λ=1.0, τ=1.0 ) -> Vector{<:Real}`
+
+replicator dynamics. Takes parameters `x` (a vector with the current state of the population
+and `p` the currently offered payoff vector.
+
+# Examples
+```julia
+(TODO)
+julia> replicator(ones(ns),zeros(ns); λ=7.0, τ=3.0 )
+...
+```
+"""
+function replicator(x::Vector{<:Real},p::Vector{<:Real}; λ=1.0, τ=10000.0 )
+    NS = length(x)
+    normalize!(x,1)
+
+    p_hat = p .- x'*p
+    
+    
+    x_dot  = x.*p_hat
+
+    x_dot
+end
 
 
 
-function hybrid_rule_maker(weights; learning_rules=[bnn, unbounded_smith])
+
+
+function hybrid_rule_maker(weights; learning_rules=[bnn, unbounded_smith, replicator])
     @assert length(weights)==length(learning_rules)
     @assert all(weights.>=0)
     @assert sum(weights)>0
@@ -91,8 +117,3 @@ function hybrid_storage_fun_maker(weights; storage_funs=[bnn_S, unbounded_smith_
         sum( weights[i]*storage_funs[i](x,p) for (i,j) in enumerate(weights))
     end
 end
-
-
-
-
-##### immitation or replicator?
