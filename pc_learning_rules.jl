@@ -14,7 +14,7 @@ using Plots
 
 
 
-#USE_TIKZ = true 
+USE_TIKZ = true 
 
 #plotly()
 gr()
@@ -27,6 +27,7 @@ else
     #plotly()
     gr()
     plt_ext = "png"
+    Plots.scalefontsizes(1.7)
     default(dpi=500)
 end
 
@@ -36,10 +37,9 @@ if @isdefined DEF_CONFIG
     plt_size = (800,600)
     default(;DEF_CONFIG...)
 else
-    plt_size = (600,500)
+    plt_size = (600,900)
     #plt_size = (900,900)
-    #default(linewidth = 3, markersize=10, margin = 10*Plots.mm,
-    #    tickfontsize=12, guidefontsize=20, legend_font_pointsize=18)
+    default(linewidth = 3, markersize=10, margin = 10*Plots.mm)
 
 end
 
@@ -179,7 +179,7 @@ f3 = plot()
 sols = []
 alphas_list = []
 for x0 in X0
-    for alphas in [[1;0;0],[0;1;0],[0.01;0;1]]
+    for alphas in [[1;0;0],[0;1;0],[0;0.01;1]]
         T  = 100.0
 
         local my_hybrid_learning_rule = hybrid_rule_maker(alphas)
@@ -207,7 +207,7 @@ aux_c = palette(:Set1_5)[[3,5,2]]
 #aux_c = palette(:Set1_5)[[3,5]]
 
 # :auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-aux_ls = [:solid; :dot; :dashdotdot]
+aux_ls = [:solid; :dot; :dashdot]
 
 simplex_sols_plot!(sols, ptype=plot!, linescolor=aux_c, linestyles=aux_ls )
 
@@ -217,7 +217,7 @@ for x0 in X0
     v0 = [0 1 -1;1 -1/2 -1/2]*x0
 
     x1 = copy(x0)
-    x1[findmin(x0)[2]] -= 0.1
+    x1[findmin(x0)[2]] -= 0.15
     v1 = [0 1 -1;1 -1/2 -1/2]*x1
 
     #v1 = v0.*(1+0.1/norm(v0,1))
@@ -225,15 +225,15 @@ for x0 in X0
 
     aux_c_local = palette(:Set1_5)[1]
 
-    plot!([v0[1]], [v0[2]], ms=5,shape=:rect,c=aux_c_local, annotations = (v1[1], v1[2], Plots.text(aux, :right, aux_c_local)), label = nothing)
+    plot!([v0[1]], [v0[2]], ms=5,shape=:rect,c=aux_c_local, annotations = (v1[1], v1[2], (aux, aux_c_local)), label = nothing)
     aux = aux+1
 end
 
 #plot!([1 1 1],[1 1 1],label=[L"\mathcal{T}^\text{\tiny BNN}" L"\mathcal{T}^\text{\tiny Smith}" L"\mathcal{T}^\text{\tiny A}"], color=aux_c', ls=permutedims(aux_ls), lw=2)
-plot!([1 1 1],[1 1 1],label=[L"\mathcal{T}^{BNN}" L"\mathcal{T}^{Smith}" L"\mathcal{T}^A"], color=aux_c', ls=permutedims(aux_ls), lw=2)
-annotate!([0; 1.03; -1].*1.1,[1; -1/2 ;-1/2].*1.1, ["1", "2", "3"])
+plot!([1 1 1],[1 1 1],label=[L"\mathcal{T}^{BNN}" L"\mathcal{T}^{Smith}" L"\mathcal{T}^b"], color=aux_c', ls=permutedims(aux_ls), lw=2)
+annotate!([0; 1.03; -1].*1.2,[1; -1/2 ;-1/2].*1.2, ["1", "2", "3"])
 xlims!(-1.3,1.3)
-ylims!(-0.6,1.15)
+ylims!(-0.7,1.3)
 
 
 #title!("Rule = Replicator + 0.01*Smith ")

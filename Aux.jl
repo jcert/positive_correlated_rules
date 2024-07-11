@@ -76,10 +76,10 @@ function simplex_plot_aux(s; ptype=scatter!, plot_dst=nothing, plot_options...)
     
 
     if isnothing(plot_dst)
-        ptype(x[1,:],x[2,:],label=false,lw=1.5; plot_options...)
+        ptype(x[1,:],x[2,:],label=false,lw=2.5; plot_options...)
         scatter!([x[1,end]],[x[2,end]],ms=7,shape=:circle,c=:black,label=false,showaxis = false)
     else
-        ptype(plot_dst,x[1,:],x[2,:],label=false,lw=1.5; plot_options...)
+        ptype(plot_dst,x[1,:],x[2,:],label=false,lw=2.5; plot_options...)
         scatter!(plot_dst,[x[1,end]],[x[2,end]],ms=7,shape=:circle,c=:black,label=false,showaxis = false)
     end
 end
@@ -138,7 +138,7 @@ end
 function simplex_sols_plot!(s;ptype=scatter!,T::Int=20,linescolor=:Spectral_3, linestyles=[:dots] )
 
     
-    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=3.0)
+    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=2.0)
     if s isa Vector
         for (i, sol) in enumerate(s)
             simplex_plot_aux(sol; ptype=ptype, color=linescolor[1+(i-1)%length(linescolor)], linestyle=linestyles[1+(i-1)%length(linestyles)])
