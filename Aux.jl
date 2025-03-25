@@ -29,6 +29,10 @@ mutable struct PDM
 end
 
 
+psim = [0 1 -1;1 -1/2 -1/2] #projection_onto_simplex
+psim = mapslices(x->normalize(x,1), [0 1 -1;1 -1/2 -1/2], dims=2)
+
+
 """
 `simplex_plot!(s;ptype=scatter!)`
 
@@ -71,16 +75,16 @@ function simplex_plot_aux(s; ptype=scatter!, plot_dst=nothing, plot_options...)
     x = x[1:ds:end]
 
 
-    x = map(v->[0 1 -1;1 -1/2 -1/2]*v,x)
+    x = map(v->psim*v,x)
     x = hcat(x...)
     
 
     if isnothing(plot_dst)
         ptype(x[1,:],x[2,:],label=false,lw=2.5; plot_options...)
-        scatter!([x[1,end]],[x[2,end]],ms=7,shape=:circle,c=:black,label=false,showaxis = false)
+        scatter!([x[1,end]],[x[2,end]],ms=8,shape=:circle,c=:black,label=false,showaxis = false)
     else
         ptype(plot_dst,x[1,:],x[2,:],label=false,lw=2.5; plot_options...)
-        scatter!(plot_dst,[x[1,end]],[x[2,end]],ms=7,shape=:circle,c=:black,label=false,showaxis = false)
+        scatter!(plot_dst,[x[1,end]],[x[2,end]],ms=8,shape=:circle,c=:black,label=false,showaxis = false)
     end
 end
 
@@ -96,12 +100,12 @@ function simplex_quiver_plot!(s,F;ptype=scatter!,T::Int=20,linescolor=:Spectral_
     dt = 1//T
     X = [ [i;j;1-i-j] for i in range(0,1,step=dt) for j in range(0,1-i,step=dt)]
     Y = F.(X)
-    FX = hcat(map(v->[0 1 -1;1 -1/2 -1/2]*v, X)...)
-    FY = hcat(map(v->1.5*dt.*normalize([0 1 -1;1 -1/2 -1/2]*v,1), Y)...)
+    FX = hcat(map(v->psim*v, X)...)
+    FY = hcat(map(v->1.5*dt.*normalize(psim*v,1), Y)...)
     #FZ = hcat(map(v->norm(v,2), Y)...)
-    FZ = hcat(map(v->norm([0 1 -1;1 -1/2 -1/2]*v,1), Y)...)
+    FZ = hcat(map(v->norm(psim*v,1), Y)...)
     
-    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=3.0)
+    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=2.6)
    
     #previous palette was :vik
     #should we use distinguishable_colors()?
@@ -137,8 +141,8 @@ end
 
 function simplex_sols_plot!(s;ptype=scatter!,T::Int=20,linescolor=:Spectral_3, linestyles=[:dots] )
 
-    
-    plot!([0; 1; -1; 0; 1].*1.02,[1; -1/2 ;-1/2; 1; -1/2].*1.02, ticks=false, label=false, c=:black, lw=2.0)
+    p = psim*[I(3) [1;0;0]]
+    plot!(p[1,:], p[2,:], ticks=false, label=false, c=:black, lw=1.7)
     if s isa Vector
         for (i, sol) in enumerate(s)
             simplex_plot_aux(sol; ptype=ptype, color=linescolor[1+(i-1)%length(linescolor)], linestyle=linestyles[1+(i-1)%length(linestyles)])
